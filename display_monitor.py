@@ -31,9 +31,7 @@ class TuiMonitor():
         self.items.append(self.header)
 
         # ----------- FOOTER -------------
-        self.footer = urwid.Text([
-            u'Press (', ('quit button', u'Q'), u') to quit.'
-        ])
+        self.footer = urwid.Text([u'Press (', ('quit button', u'Q'), u') to quit.'])
         self.items.append(self.footer)
 
         # ----------- MAIN LAYOUT -------------
@@ -43,6 +41,11 @@ class TuiMonitor():
         self.main_loop.draw_screen()
         timeText = u''.join(str(time.ctime()))
         self.footer.set_text(timeText)
+        for item in self.items:
+            try:
+                item.refresh()
+            except AttributeError:
+                pass
         self.main_loop.set_alarm_in(1, self._refresh)
 
     def run(self):
