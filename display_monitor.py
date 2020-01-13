@@ -20,8 +20,13 @@ class TuiMonitor():
 
     def __init__(self):
         self.addcells([f"bar n°{n}" for n in range(5)])
-        self.mainBody = urwid.Pile(self.cells)
 
+        # Text log
+        self.textLog = urwid.Text('dsqkjlqdmmk')
+        self.items.append(self.textLog)
+        self.cells.append(urwid.Filler(self.textLog, top=10, bottom=10))
+
+        self.mainBody = urwid.Pile(self.cells)
         self.setGlobalLayout()
 
         # init display
