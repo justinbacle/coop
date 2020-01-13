@@ -1,6 +1,13 @@
 import urwid
 import time
 import random
+import lorem
+
+
+'''
+Todo :
+Make two Piles, one for bars, and a higher one that includes the barsPile and bottom text event viewer
+'''
 
 
 class heatBar(urwid.ProgressBar):
@@ -15,18 +22,18 @@ class heatBar(urwid.ProgressBar):
 
 class TuiMonitor():
 
-    items = []
+    refreshItems = []
     cells = []
 
     def __init__(self):
         self.addcells([f"bar n°{n}" for n in range(5)])
 
         # Text log
-        self.textLog = urwid.Text('dsqkjlqdmmk')
-        self.items.append(self.textLog)
-        self.cells.append(urwid.Filler(self.textLog, top=10, bottom=10))
+        self.textLog = urwid.Text('')
+        self.refreshItems.append(self.textLog)
+        self.cells.append(urwid.LineBox(urwid.Filler(self.textLog), title='Log', title_align='left'))
 
-        self.mainBody = urwid.Pile(self.cells)
+        self.mainBody = urwid.LineBox(urwid.Pile(self.cells))
         self.setGlobalLayout()
 
         # init display
@@ -70,11 +77,11 @@ class TuiMonitor():
         # ------------ HEADER ------------
         header_text = urwid.Text(('header', u'COOP Heating Control'))
         self.header = urwid.AttrMap(header_text, 'titlebar')
-        self.items.append(self.header)
+        self.refreshItems.append(self.header)
 
         # ----------- FOOTER -------------
         self.footer = urwid.Text([u'Press (', ('quit button', u'Q'), u') to quit.'])
-        self.items.append(self.footer)
+        self.refreshItems.append(self.footer)
 
         # ----------- MAIN LAYOUT -------------
         self.mainFrame = urwid.Frame(header=self.header, body=self.mainBody, footer=self.footer)
@@ -83,7 +90,7 @@ class TuiMonitor():
         self.main_loop.draw_screen()
         timeText = u''.join(str(time.ctime()))
         self.footer.set_text(timeText)
-        for item in self.items:
+        for item in self.refreshItems:
             try:
                 item.refresh()
             except AttributeError:
@@ -94,6 +101,7 @@ class TuiMonitor():
         for bar in self.bars:
             bar.set_completion(random.randint(0, 80))
         self.main_loop.set_alarm_in(1, self._randomFill)
+        self.textLog.set_text(lorem.paragraph())
 
     def run(self):
         self.main_loop.set_alarm_in(1, self._refresh)
