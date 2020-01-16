@@ -26,12 +26,24 @@ class TuiMonitor():
     cells = []
 
     def __init__(self):
+
+        # Mode Boxes
+        self.modeButtons = urwid.SimpleFocusListWalker([])
+        for _t in ['a', 'b', 'c', 'd']:
+            # b = urwid.CheckBox(_t)  # check box keep focus
+            b = urwid.Text(_t.upper())  # need to make custom class
+            self.modeButtons.append(b)
+        self.modeBoxes = urwid.LineBox(
+            urwid.Filler(urwid.Columns(self.modeButtons)), title="Modes", title_align='center')
+        self.cells.append(self.modeBoxes)
+
+        # Heat Bars
         self.addcells([f"bar n°{n}" for n in range(5)])
 
         # Text log
         self.textLog = urwid.Text('')
         self.refreshItems.append(self.textLog)
-        self.cells.append(urwid.LineBox(urwid.Filler(self.textLog), title='Log', title_align='left'))
+        self.cells.append(urwid.LineBox(urwid.Filler(self.textLog), title='Log', title_align='center'))
 
         self.mainBody = urwid.LineBox(urwid.Pile(self.cells))
         self.setGlobalLayout()
@@ -66,7 +78,10 @@ class TuiMonitor():
         for name in names:
             bar = heatBar(title=name)
             self.bars.append(bar)
-            self.cells.append(urwid.Filler(bar))
+            # self.cells.append(urwid.Filler(bar))
+        self.cells.append(urwid.LineBox(urwid.Pile(
+            [urwid.Padding(urwid.Filler(bar), left=2, right=2) for bar in self.bars]
+            ), title='Temperatures', title_align='center'))
 
     # Handle key presses
     def _handleInput(self, key):
