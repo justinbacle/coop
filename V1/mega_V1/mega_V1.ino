@@ -144,7 +144,7 @@ void loop() {
   // LECTURE DES CAPTEURS
   double tempo;int n = 500;double temp;
 
-  int SerialDelay = 150;
+  int SerialDelay = 300;
 
   // Nano on Serial1
   Serial1.println("TC1");
