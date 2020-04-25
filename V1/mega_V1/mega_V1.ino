@@ -50,7 +50,6 @@ int Brunal_mini = 55;
 int tConv = 0;
 
 double S_ABR, S_SECS, S_RBR, S_BTB2, S_BTB1, S_BECS, S_BTH, S_SOL;
-double Ecs;
 
 float nA = 0;
 float nB = 0;
@@ -190,19 +189,13 @@ void loop() {
   S_SOL = getSerial3Temp();
   if(DEBUG){Serial.print("S_SOL:");Serial.print(S_SOL);Serial.print("C ");}
 
-  // ECS
-  tempo = 0;
-  for (int e=0; e<n;e++){tempo = tempo + analogRead(4);}
-  temp = tempo/n;Ecs = convertTC(temp);
-  if(DEBUG){Serial.print("Ecs:");Serial.print(Ecs);Serial.print("C ");}
-
   // AQUASTAT
   int aq = !digitalRead(29);
   if(DEBUG){Serial.print("eAQ=");Serial.print(aq);Serial.print(" ");}
 
   // ECSb
-  if(Ecs<ECSb_Low){ECSb=ECSb_High;}
-  if(Ecs>ECSb_High){ECSb=ECSb_Low;}
+  if(S_BECS<ECSb_Low){ECSb=ECSb_High;}
+  if(S_BECS>ECSb_High){ECSb=ECSb_Low;}
   if(DEBUG){Serial.print("ECSb:");Serial.print(ECSb);Serial.print(" ");}
 
   // LECTURE DES BOUTONS
@@ -222,7 +215,7 @@ void loop() {
 
   // ALERTES
   int alerte = -100;
-  if(S_ABR < alerte || Ecs < alerte || S_BTB2 < alerte || S_BTH < alerte || S_SOL < alerte)
+  if(S_ABR < alerte || S_BECS < alerte || S_BTB2 < alerte || S_BTH < alerte || S_SOL < alerte)
     {digitalWrite(30,HIGH);delay(1000);digitalWrite(30,LOW);}
 
   // PORT SERIE
@@ -247,32 +240,32 @@ void loop() {
   // GESTION DES MODES
   
   // MODE A : Sécurité Aquastat
-  bool CAON = S_ABR>80 && Ecs>25 && Ecs<40 && S_ABR>Ecs+5 && S_ABR>S_BTB2+5 && Ecs<ECSb || S_ABR>92 || S_ABR>70 && Ecs>37 && Ecs<ECSb;
-  bool CAOFF = S_ABR < 70 && Ecs<37 || S_ABR<Ecs+5 && S_ABR<80 || S_ABR<S_BTB2+5 && S_ABR<80 ||S_ABR<85 && Ecs>ECSb || S_ABR<61 && Ecs>37;
+  bool CAON = S_ABR>80 && S_BECS>25 && S_BECS<40 && S_ABR>S_BECS+5 && S_ABR>S_BTB2+5 && S_BECS<ECSb || S_ABR>92 || S_ABR>70 && S_BECS>37 && S_BECS<ECSb;
+  bool CAOFF = S_ABR < 70 && S_BECS<37 || S_ABR<S_BECS+5 && S_ABR<80 || S_ABR<S_BTB2+5 && S_ABR<80 ||S_ABR<85 && S_BECS>ECSb || S_ABR<61 && S_BECS>37;
   //Activation Mode A
   if((A==0) && (AUTO && CAON || !AUTO && FP==1)){A=1;}
   //Arret Mode A
   if((A==1) && (AUTO && CAOFF || !AUTO && FP==2)){A=0;}
 
   // MODE B : Tampon -> ECS
-  bool CBON = S_BTH>Ecs+25 && Ecs<ECSb && S_BTH>45 && S_ABR<25 ||S_BTB2>80 && Ecs<80&&S_ABR<25;
-  bool CBOFF = (S_BTH<(Ecs+10)) || (S_BTH<50) || (Ecs>ECSb && S_BTH<80) || S_ABR>25;
+  bool CBON = S_BTH>S_BECS+25 && S_BECS<ECSb && S_BTH>45 && S_ABR<25 ||S_BTB2>80 && S_BECS<80&&S_ABR<25;
+  bool CBOFF = (S_BTH<(S_BECS+10)) || (S_BTH<50) || (S_BECS>ECSb && S_BTH<80) || S_ABR>25;
   //Arret Mode B
   if((B==1) && (AUTO && CBOFF || !AUTO && FP==4)){B=0;}
   //Activation Mode B
   if((B==0) && (AUTO && CBON || !AUTO && FP==3)){B=1;}
 
   // MODE C : Brunal -> Tampon
-  bool CCON = Ecs>ECSb && S_BTB2<85 && S_ABR>(enc_Brunal) && S_ABR>S_BTB2+30 ;
-  bool CCOFF = S_ABR<S_BTB2+5 && S_ABR<80|| Ecs<ECSb || S_ABR<Brunal_mini ;
+  bool CCON = S_BECS>ECSb && S_BTB2<85 && S_ABR>(enc_Brunal) && S_ABR>S_BTB2+30 ;
+  bool CCOFF = S_ABR<S_BTB2+5 && S_ABR<80|| S_BECS<ECSb || S_ABR<Brunal_mini ;
   //Activation Mode C
   if((C==0) && (AUTO && CCON || !AUTO && FP==5)){C=1;}
   //Arret Mode C
   if((C==1) && (AUTO && CCOFF || !AUTO && FP==6)){C=0;}
 
   // MODE D : Brunal -> ECS
-  bool CDON = S_ABR>(enc_Brunal) && Ecs<ECSb && S_ABR>Ecs+30;
-  bool CDOFF = Ecs>ECSb || S_ABR<Ecs+5 && S_ABR<80|| S_ABR<Brunal_mini;
+  bool CDON = S_ABR>(enc_Brunal) && S_BECS<ECSb && S_ABR>S_BECS+30;
+  bool CDOFF = S_BECS>ECSb || S_ABR<S_BECS+5 && S_ABR<80|| S_ABR<Brunal_mini;
   //Activation Mode D
   if((D==0) && (AUTO && CDON || !AUTO && FP==10)){D=1;}
   //Arret Mode D
@@ -280,9 +273,9 @@ void loop() {
 
   // MODE E
   bool CEON = false;
-  if(S_SOL>55 && S_SOL>Ecs+30){CEON=true;}
+  if(S_SOL>55 && S_SOL>S_BECS+30){CEON=true;}
   bool CEOFF = false;
-  if(Ecs){CEOFF=S_SOL<(10+Ecs);}
+  if(S_BECS){CEOFF=S_SOL<(10+S_BECS);}
   if(S_SOL<55){CEOFF=true;}
 
   // Tempo mode E
