@@ -1,4 +1,4 @@
- #include <LedControl.h>
+#include <LedControl.h>
 
 // DEFINITION VARIABLES
 
@@ -49,7 +49,8 @@ int tempoE_EV5 = 0;
 int Brunal_mini = 55;
 int tConv = 0;
 
-double Brunal, Tampon_b, Tampon_h, Ecs, Ces;
+double S_ABR, S_SECS, S_RBR, S_BTB2, S_BTB1, S_BECS, S_BTH, S_SOL;
+double Ecs;
 
 float nA = 0;
 float nB = 0;
@@ -69,27 +70,34 @@ LedControl lc1 = LedControl(50,52,34,1);
 LedControl lc2 = LedControl(50,52,35,1);
 
 // FONCTIONS
-void resetLCD(){
-  lc1.shutdown(0,false);lc2.shutdown(0,false);delay(1000);
-  lc1.setIntensity(0,5);lc2.setIntensity(0,5);delay(1000);
-  lc1.clearDisplay(0);lc2.clearDisplay(0);
-}
 double convertTC(double value){
   double temp = value * 5.0 / 1023.0;
   double elise = (temp - 1.18)/0.005;
   return elise;
 }
 
-void seg(double number,double number2, int device){
-  int hundreds = number/100;number = number - hundreds*100;
-  int tens = number / 10;int ones = number - tens*10;
-  int hundreds2 = number2/100;number2 = number2 - hundreds2*100;
-  int tens2 = number2 / 10;int ones2 = number2 - tens2*10; 
-  if(device==1)
-    {lc1.setDigit(0,7,hundreds,false);lc1.setDigit(0,6,tens,false);lc1.setDigit(0,5,ones,false);
-    lc1.setDigit(0,3,hundreds2,false);lc1.setDigit(0,2,tens2,false);lc1.setDigit(0,1,ones2,false);}
-  else {lc2.setDigit(0,7,hundreds,false);lc2.setDigit(0,6,tens,false);lc2.setDigit(0,5,ones,false);
-  lc2.setDigit(0,3,hundreds2,false);lc2.setDigit(0,2,tens2,false);lc2.setDigit(0,1,ones2,false);}
+float getSerial1Temp(){
+  char inData[16] = "";int index = 0;
+  while (Serial1.available()) {
+    inData[index] = Serial1.read();index++;
+  }
+  return String(inData).toFloat();
+}
+
+float getSerial2Temp(){
+  char inData[16] = "";int index = 0;
+  while (Serial2.available()) {
+    inData[index] = Serial2.read();index++;
+  }
+  return String(inData).toFloat();
+}
+
+float getSerial3Temp(){
+  char inData[16] = "";int index = 0;
+  while (Serial3.available()) {
+    inData[index] = Serial3.read();index++;
+  }
+  return String(inData).toFloat();
 }
 
 void relais(){
@@ -112,6 +120,8 @@ void setup() {
   // SERIAL
     Serial.begin(9600);Serial.println("Init ...");
     Serial1.begin(9600);
+    Serial2.begin(9600);
+    Serial3.begin(9600);
     delay(500);
   // LEDS
     for (int i=2; i<10;i++){pinMode(i, OUTPUT);digitalWrite(i,HIGH);delay(100);digitalWrite(i,LOW);}
@@ -122,8 +132,6 @@ void setup() {
     pinMode(29,INPUT);
   // AUTO-MANU Switch
     pinMode(12,INPUT);
-  // DISPLAY
-    resetLCD();
   // RESET SW
     pinMode(25,INPUT_PULLUP);
 }
@@ -137,40 +145,57 @@ void loop() {
   // LECTURE DES CAPTEURS
   double tempo;int n = 500;double temp;
 
-  // Brunal2.0 - Nano
-  Serial1.println("TC2");
-  delay(500);
-  if (Serial1.available()) {
-    char inData[16] = "";int index = 0;
-    while (Serial1.available()) {inData[index] = Serial1.read();index++;}
-    Brunal = String(inData).toFloat();
-  }
-  if(DEBUG){Serial.print("Brunal:");Serial.print(Brunal);Serial.print("C ");}
-  
-  // TAMPON_b
-  tempo = 0;
-  for (int e=0; e<n;e++){tempo = tempo + analogRead(2);}
-  temp = tempo/n;Tampon_b = convertTC(temp);
-  if(DEBUG){Serial.print("Tampon_b:");Serial.print(Tampon_b);Serial.print("C ");}
+  int SerialDelay = 150;
 
-  // Tampon_h
-  tempo = 0;
-  for (int e=0; e<n;e++){tempo = tempo + analogRead(3);}
-  temp = tempo/n;Tampon_h = convertTC(temp);
-  if(DEBUG){Serial.print("Tampon_h:");Serial.print(Tampon_h);Serial.print("C ");}
+  // Nano on Serial1
+  Serial1.println("TC1");
+  delay(SerialDelay);
+  S_SECS = getSerial1Temp();
+  if(DEBUG){Serial.print("S_SECS:");Serial.print(S_SECS);Serial.print("C ");}
+
+  Serial1.println("TC2");
+  delay(SerialDelay);
+  S_ABR = getSerial1Temp();
+  if(DEBUG){Serial.print("S_ABR:");Serial.print(S_ABR);Serial.print("C ");}
+
+  Serial1.println("TC3");
+  delay(SerialDelay);
+  S_RBR = getSerial1Temp();
+  if(DEBUG){Serial.print("S_RBR:");Serial.print(S_RBR);Serial.print("C ");}
+
+  // Nano on Serial2
+  Serial2.println("TC1");
+  delay(SerialDelay);
+  S_BTB2 = getSerial2Temp();
+  if(DEBUG){Serial.print("S_BTB2:");Serial.print(S_BTB2);Serial.print("C ");}
+
+  Serial2.println("TC2");
+  delay(SerialDelay);
+  S_BECS = getSerial2Temp();
+  if(DEBUG){Serial.print("S_BECS:");Serial.print(S_BECS);Serial.print("C ");}
+
+  Serial2.println("TC3");
+  delay(SerialDelay);
+  S_BTH = getSerial2Temp();
+  if(DEBUG){Serial.print("S_BTH:");Serial.print(S_BTH);Serial.print("C ");}
+
+  Serial2.println("TC4");
+  delay(SerialDelay);
+  S_BTB1 = getSerial2Temp();
+  if(DEBUG){Serial.print("S_BTB1:");Serial.print(S_BTB1);Serial.print("C ");}
+
+  // Nano on Serial3
+  Serial3.println("TC2");
+  delay(SerialDelay);
+  S_SOL = getSerial3Temp();
+  if(DEBUG){Serial.print("S_SOL:");Serial.print(S_SOL);Serial.print("C ");}
 
   // ECS
   tempo = 0;
   for (int e=0; e<n;e++){tempo = tempo + analogRead(4);}
   temp = tempo/n;Ecs = convertTC(temp);
   if(DEBUG){Serial.print("Ecs:");Serial.print(Ecs);Serial.print("C ");}
-  
-  // CES
-  tempo = 0;
-  for (int e=0; e<n;e++){tempo = tempo + analogRead(1);}
-  temp = tempo/n;Ces = convertTC(temp);
-  if(DEBUG){Serial.print("Ces:");Serial.print(Ces);Serial.print("C ");}
-  
+
   // AQUASTAT
   int aq = !digitalRead(29);
   if(DEBUG){Serial.print("eAQ=");Serial.print(aq);Serial.print(" ");}
@@ -197,23 +222,14 @@ void loop() {
 
   // ALERTES
   int alerte = -100;
-  if(Brunal < alerte || Ecs < alerte || Tampon_b < alerte || Tampon_h < alerte || Ces < alerte)
+  if(S_ABR < alerte || Ecs < alerte || S_BTB2 < alerte || S_BTH < alerte || S_SOL < alerte)
     {digitalWrite(30,HIGH);delay(1000);digitalWrite(30,LOW);}
-  
-  // AFFICHAGE
-  /*
-  N++;
-  if(N>60){resetLCD();N=0;}
-  seg(Brunal,Tampon_b,1);seg(Ecs,Ces,2);
-  */
 
   // PORT SERIE
   if(Serial.available() > 0)
     {String serial = Serial.readString();
     if(serial=="debug")
       DEBUG=!DEBUG;
-    if(serial=="resetLCD")
-      resetLCD();
     if(serial=="reset")
       resetFunc();
     if(serial=="A"){Serial.print("mode A actif ~");Serial.print(nA*2/60);Serial.print(" min");}
@@ -231,73 +247,53 @@ void loop() {
   // GESTION DES MODES
   
   // MODE A : Sécurité Aquastat
-  bool CAON = Brunal>80 && Ecs>25 && Ecs<40 && Brunal>Ecs+5 && Brunal>Tampon_b+5 && Ecs<ECSb || Brunal>92 || Brunal>70 && Ecs>37 && Ecs<ECSb;
-  bool CAOFF = Brunal < 70 && Ecs<37 || Brunal<Ecs+5 && Brunal<80 || Brunal<Tampon_b+5 && Brunal<80 ||Brunal<85 && Ecs>ECSb || Brunal<61 && Ecs>37;
+  bool CAON = S_ABR>80 && Ecs>25 && Ecs<40 && S_ABR>Ecs+5 && S_ABR>S_BTB2+5 && Ecs<ECSb || S_ABR>92 || S_ABR>70 && Ecs>37 && Ecs<ECSb;
+  bool CAOFF = S_ABR < 70 && Ecs<37 || S_ABR<Ecs+5 && S_ABR<80 || S_ABR<S_BTB2+5 && S_ABR<80 ||S_ABR<85 && Ecs>ECSb || S_ABR<61 && Ecs>37;
   //Activation Mode A
   if((A==0) && (AUTO && CAON || !AUTO && FP==1)){A=1;}
   //Arret Mode A
   if((A==1) && (AUTO && CAOFF || !AUTO && FP==2)){A=0;}
 
   // MODE B : Tampon -> ECS
-  bool CBON = Tampon_h>Ecs+25 && Ecs<ECSb && Tampon_h>45 && Brunal<25 ||Tampon_b>80 && Ecs<80&&Brunal<25;
-  // ((Tampon_h>(Ecs+15)) && Ecs<ECSb && Tampon_h>25 ||(Tampon_b>80 && Ecs<80))&&Brunal<25;
-  //bool CBOFF = ((Ecs+10)>Tampon_h) || (Tampon_h<50) || (Ecs>ECSb && Tampon_h<90) || (Brunal>enc_Brunal);
-  bool CBOFF = (Tampon_h<(Ecs+10)) || (Tampon_h<50) || (Ecs>ECSb && Tampon_h<80) || Brunal>25;
+  bool CBON = S_BTH>Ecs+25 && Ecs<ECSb && S_BTH>45 && S_ABR<25 ||S_BTB2>80 && Ecs<80&&S_ABR<25;
+  bool CBOFF = (S_BTH<(Ecs+10)) || (S_BTH<50) || (Ecs>ECSb && S_BTH<80) || S_ABR>25;
   //Arret Mode B
   if((B==1) && (AUTO && CBOFF || !AUTO && FP==4)){B=0;}
   //Activation Mode B
   if((B==0) && (AUTO && CBON || !AUTO && FP==3)){B=1;}
-  //Arret Mode B
-  //if((B==1) && (AUTO && CBOFF || !AUTO && FP==4)){B=0;}
 
   // MODE C : Brunal -> Tampon
-  bool CCON = Ecs>ECSb && Tampon_b<85 && Brunal>(enc_Brunal) && Brunal>Tampon_b+30 ;
-  bool CCOFF = Brunal<Tampon_b+5 && Brunal<80|| Ecs<ECSb || Brunal<Brunal_mini ;
+  bool CCON = Ecs>ECSb && S_BTB2<85 && S_ABR>(enc_Brunal) && S_ABR>S_BTB2+30 ;
+  bool CCOFF = S_ABR<S_BTB2+5 && S_ABR<80|| Ecs<ECSb || S_ABR<Brunal_mini ;
   //Activation Mode C
   if((C==0) && (AUTO && CCON || !AUTO && FP==5)){C=1;}
   //Arret Mode C
   if((C==1) && (AUTO && CCOFF || !AUTO && FP==6)){C=0;}
 
   // MODE D : Brunal -> ECS
-  bool CDON = Brunal>(enc_Brunal) && Ecs<ECSb && Brunal>Ecs+30;
-  bool CDOFF = Ecs>ECSb || Brunal<Ecs+5 && Brunal<80|| Brunal<Brunal_mini;
+  bool CDON = S_ABR>(enc_Brunal) && Ecs<ECSb && S_ABR>Ecs+30;
+  bool CDOFF = Ecs>ECSb || S_ABR<Ecs+5 && S_ABR<80|| S_ABR<Brunal_mini;
   //Activation Mode D
   if((D==0) && (AUTO && CDON || !AUTO && FP==10)){D=1;}
   //Arret Mode D
   if((D==1) && (AUTO && CDOFF || !AUTO && FP==11)){D=0;}
 
   // MODE E
-
   bool CEON = false;
-    //if(Ecs<=10){CEON=Ces>(60+Ecs);}
-    //if(Ecs>10&&Ecs<=15){CEON=Ces>(55+Ecs);}
-    //if(Ecs>15&&Ecs<=20){CEON=Ces>(50+Ecs);}
-    //if(Ecs>20&&Ecs<=30){CEON=Ces>(40+Ecs);}
-    //if(Ecs>30&&Ecs<=40){CEON=Ces>(30+Ecs);}
-    //if(Ecs>40&&Ecs<=50){CEON=Ces>(20+Ecs);}
-    //if(Ecs>50){CEON=Ces>(5+Ecs);}
-    if(Ces>55 && Ces>Ecs+30){CEON=true;}
+  if(S_SOL>55 && S_SOL>Ecs+30){CEON=true;}
   bool CEOFF = false;
-    //if(Ecs<=10){CEOFF=Ces<(45+Ecs);}
-    //if(Ecs>10&&Ecs<=15){CEOFF=Ces<(40+Ecs);}
-    //if(Ecs>15&&Ecs<=20){CEOFF=Ces<(35+Ecs);}
-    //if(Ecs>20&&Ecs<=30){CEOFF=Ces<(25+Ecs);}
-    //if(Ecs>30&&Ecs<=40){CEOFF=Ces<(15+Ecs);}
-    //if(Ecs>40&&Ecs<=50){CEOFF=Ces<(2+Ecs);}
-    //if(Ecs>50){CEOFF=Ces<(1+Ecs);}
-    if(Ecs){CEOFF=Ces<(10+Ecs);}
-    if(Ces<55){CEOFF=true;}
-    
-    // Tempo mode E
-    //int tempoE_ = 121;
-    int tempoE_ = 1; // Changement de sonde, plus besoin de tempo
-    if(tempoE < tempoE_){CEOFF = false;}
+  if(Ecs){CEOFF=S_SOL<(10+Ecs);}
+  if(S_SOL<55){CEOFF=true;}
 
-    // Tempo retard mode E P4
-    int tempoE_P4_ = 50;
+  // Tempo mode E
+  int tempoE_ = 1; // Changement de sonde, plus besoin de tempo
+  if(tempoE < tempoE_){CEOFF = false;}
 
-     // Tempo retard mode E EV5
-    int tempoE_EV5_ = 50;
+  // Tempo retard mode E P4
+  int tempoE_P4_ = 50;
+
+    // Tempo retard mode E EV5
+  int tempoE_EV5_ = 50;
 
   //Activation Mode E
   if((E==0) && (AUTO && CEON || !AUTO && FP==14)){E=1;}
@@ -307,15 +303,6 @@ void loop() {
   if(E){tempoE++;}else{tempoE=0;}
   if(E){tempoE_P4++;}else{tempoE_P4=0;}
   if(E){tempoE_EV5++;}else{tempoE_EV5=0;}
-  /*
-  // MODE F : Desembouage circuit solaire
-  bool CFON = nTotal<150;
-  bool CFOFF = nTotal>=150;
-  //Activation Mode F
-  if((F==0) && (AUTO && CFON)){F=1;}
-  //Arret Mode F
-  if((F==1) && (AUTO && CFOFF)){F=0;}
-  */
 
   // MODE F : Ouverture EV primaire
   bool CFON = 0;
@@ -326,24 +313,24 @@ void loop() {
   if((F==1) && (AUTO && CFOFF)){F=0;}
 
   // MODE G : Mode Hors Gel
-  bool CGON = Ces<-90;
-  bool CGOFF = Ces>-90;
+  bool CGON = S_SOL < -90;
+  bool CGOFF = S_SOL > -90;
   //Activation Mode G
   if((G==0) && (AUTO && CGON)){G=1;}
   //Arret Mode G
   if((G==1) && (AUTO && CGOFF)){G=0;}
 
   // MODE S : Circulation Brunal
-  bool CSON = aq || (Brunal>25) ;
-  bool CSOFF = !aq && (Brunal<25) ;
+  bool CSON = aq || (S_ABR>25) ;
+  bool CSOFF = !aq && (S_ABR<25) ;
   //Activation Mode S
   if((S==0) && (AUTO && CSON)){S=1;}
   //Arret Mode S
   if((S==1) && (AUTO && CSOFF)){S=0;}
    
   // MODE Z : Brunal + Tampon -> ECS
-  bool CZON = Tampon_b>85 && Brunal>94;
-  bool CZOFF = Brunal<(enc_Brunal-10); 
+  bool CZON = S_BTB2>85 && S_ABR>94;
+  bool CZOFF = S_ABR<(enc_Brunal-10); 
   //Activation Mode Z
   if((Z==0) && (AUTO && CZON || !AUTO && FP==12)){Z=1;}
   //Arret Mode Z
@@ -357,9 +344,8 @@ void loop() {
     if(C){Z=0;A=0;B=0;C=1;D=0;Serial.println("Priorité Mode C");}
     if(D){Z=0;A=0;B=0;C=0;D=1;Serial.println("Priorité Mode D");}
   }
-    
-  // ACTIVATION/ARRET DES MODES
 
+  // ACTIVATION/ARRET DES MODES
   EV1=0;EV2=0;EV3=0;EV4=0;EV5=0;
   Conv=0;
   P1=0;P2=0;P3=0;P4=0;
@@ -373,7 +359,6 @@ void loop() {
   }
   if (tConv > 0){Conv=1;}
 
-  
   if(A){EV1=1;EV2=1;EV4=1;Conv=1;P1=1;P4=1;digitalWrite(2,HIGH);}
   if(!A){digitalWrite(2,LOW);}
   if(DEBUG && A){Serial.print("A");}
@@ -390,14 +375,12 @@ void loop() {
   if(!D){digitalWrite(7,LOW);}
   if(DEBUG && D){Serial.print("D");}
 
-  //if(E){EV5=1;Conv=1;P3=1;P4=1;digitalWrite(9,HIGH);}
   if(E){Conv=1;P3=1;digitalWrite(9,HIGH);}
   if(E && tempoE_P4>tempoE_P4_){P4=1;}
   if(E && tempoE_EV5>tempoE_EV5_){EV5=1;}
   if(!E){digitalWrite(9,LOW);}
   if(DEBUG && E){Serial.print("E");}
 
-  //if(F){Conv=1;P3=1;digitalWrite(5,HIGH);}
   if(F){EV1=1;EV2=1;EV3=1;digitalWrite(5,HIGH);}
   if(!F){digitalWrite(5,LOW);}
   if(DEBUG && F){Serial.print("F");}
@@ -454,7 +437,6 @@ void loop() {
   fin=millis();
   //Serial.print("temps boucle : ");Serial.print(fin-debut);Serial.println("ms");
   debut=millis();
-  
 }
 
   /* MISC STUFF
