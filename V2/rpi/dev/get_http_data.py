@@ -1,11 +1,12 @@
 import urllib.request
 import re
-from typing import Tuple
+# from typing import Tuple  # not compatible w/ 3.7
 
 ip = "192.168.1.111"
 
 
-def getSensorDataFromIp(ip: str) -> Tuple[str, float]:
+# def getSensorDataFromIp(ip: str) -> Tuple[str, float]:  # not compatible w/ 3.7
+def getSensorDataFromIp(ip):
     if not re.match(ip, r"http:\\\\.*"):
         ip = 'http://' + ip
 
