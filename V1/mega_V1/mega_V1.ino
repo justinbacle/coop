@@ -29,6 +29,7 @@ int B=0;
 int C=0;
 int D=0;
 int E=0;
+int E_=0;
 int F=0;
 int G=0;
 int S=0;
@@ -56,6 +57,7 @@ float nB = 0;
 float nC = 0;
 float nD = 0;
 float nE = 0;
+float nE_ = 0;
 float nF = 0;
 float nG = 0;
 float nS = 0;
@@ -230,6 +232,7 @@ void loop() {
     if(serial=="C"){Serial.print("mode C actif ~");Serial.print(nC*2/60);Serial.print(" min");}
     if(serial=="D"){Serial.print("mode D actif ~");Serial.print(nD*2/60);Serial.print(" min");}
     if(serial=="E"){Serial.print("mode E actif ~");Serial.print(nE*2/60);Serial.print(" min");}
+    if(serial=="E_"){Serial.print("mode E_ actif ~");Serial.print(nE*2/60);Serial.print(" min");}
     if(serial=="F"){Serial.print("mode F actif ~");Serial.print(nF*2/60);Serial.print(" min");}
     if(serial=="G"){Serial.print("mode G actif ~");Serial.print(nG*2/60);Serial.print(" min");}
     if(serial=="S"){Serial.print("mode S actif ~");Serial.print(nS*2/60);Serial.print(" min");}
@@ -273,29 +276,19 @@ void loop() {
 
   // MODE E
   bool CEON = false;
-  if(S_SOL>55 && S_SOL>S_BECS+30){CEON=true;}
+  if(S_SOL>45.5){CEON=true;}
   bool CEOFF = false;
-  if(S_BECS){CEOFF=S_SOL<(10+S_BECS);}
-  if(S_SOL<55){CEOFF=true;}
-
-  // Tempo mode E
-  int tempoE_ = 1; // Changement de sonde, plus besoin de tempo
-  if(tempoE < tempoE_){CEOFF = false;}
-
-  // Tempo retard mode E P4
-  int tempoE_P4_ = 50;
-
-    // Tempo retard mode E EV5
-  int tempoE_EV5_ = 50;
-
+  if(S_SOL<45){CEOFF=true;}
   //Activation Mode E
   if((E==0) && (AUTO && CEON || !AUTO && FP==14)){E=1;}
   //Arret Mode E
   if((E==1) && (AUTO && CEOFF || !AUTO && FP==15)){E=0;}
 
-  if(E){tempoE++;}else{tempoE=0;}
-  if(E){tempoE_P4++;}else{tempoE_P4=0;}
-  if(E){tempoE_EV5++;}else{tempoE_EV5=0;}
+  // MODE E - OVERRIDE
+  bool CE_ON = false;
+  if(S_SOL>60 && S_SOL>S_BECS+30 || S_SOL>95){CE_ON = true;}
+  bool CE_OFF = false;
+  if(S_SOL<S_BECS+10){CE_OFF=false;}
 
   // MODE F : Ouverture EV primaire
   bool CFON = 0;
@@ -343,7 +336,7 @@ void loop() {
   Conv=0;
   P1=0;P2=0;P3=0;P4=0;
 
-  if (A || B || C || D || E || F || G || S || Z){
+  if (A || B || C || D || E || E_ || F || G || S || Z){
     // Temps de maintien du convertisseur
     tConv = 30;
   }
@@ -369,10 +362,12 @@ void loop() {
   if(DEBUG && D){Serial.print("D");}
 
   if(E){Conv=1;P3=1;digitalWrite(9,HIGH);}
-  if(E && tempoE_P4>tempoE_P4_){P4=1;}
-  if(E && tempoE_EV5>tempoE_EV5_){EV5=1;}
   if(!E){digitalWrite(9,LOW);}
   if(DEBUG && E){Serial.print("E");}
+
+  if(E_){P4=1;Conv=1;}
+  if(!E_){}
+  if(DEBUG && E){Serial.print("E_");}
 
   if(F){EV1=1;EV2=1;EV3=1;digitalWrite(5,HIGH);}
   if(!F){digitalWrite(5,LOW);}
@@ -413,6 +408,7 @@ void loop() {
   if(C){nC++;}
   if(D){nD++;}
   if(E){nE++;}
+  if(E_){nE_++;}
   if(F){nF++;}
   if(G){nG++;}
   if(S){nS++;}
