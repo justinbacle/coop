@@ -29,7 +29,7 @@ int B=0;
 int C=0;
 int D=0;
 int E=0;
-int E_=0;
+int H=0;
 int F=0;
 int G=0;
 int S=0;
@@ -45,8 +45,8 @@ double ECSb_High = 55; //60
 double ECSb_Low = 30;
 double ECSb = ECSb_High;
 int tempoE = 0;
-int tempoE_P4 = 0;
-int tempoE_EV5 = 0;
+int tempoHP4 = 0;
+int tempoHEV5 = 0;
 int Brunal_mini = 57;
 int tConv = 0;
 
@@ -57,7 +57,7 @@ float nB = 0;
 float nC = 0;
 float nD = 0;
 float nE = 0;
-float nE_ = 0;
+float nH = 0;
 float nF = 0;
 float nG = 0;
 float nS = 0;
@@ -232,7 +232,7 @@ void loop() {
     if(serial=="C"){Serial.print("mode C actif ~");Serial.print(nC*2/60);Serial.print(" min");}
     if(serial=="D"){Serial.print("mode D actif ~");Serial.print(nD*2/60);Serial.print(" min");}
     if(serial=="E"){Serial.print("mode E actif ~");Serial.print(nE*2/60);Serial.print(" min");}
-    if(serial=="E_"){Serial.print("mode E_ actif ~");Serial.print(nE*2/60);Serial.print(" min");}
+    if(serial=="H"){Serial.print("mode H actif ~");Serial.print(nE*2/60);Serial.print(" min");}
     if(serial=="F"){Serial.print("mode F actif ~");Serial.print(nF*2/60);Serial.print(" min");}
     if(serial=="G"){Serial.print("mode G actif ~");Serial.print(nG*2/60);Serial.print(" min");}
     if(serial=="S"){Serial.print("mode S actif ~");Serial.print(nS*2/60);Serial.print(" min");}
@@ -275,24 +275,20 @@ void loop() {
   if((D==1) && (AUTO && CDOFF || !AUTO && FP==11)){D=0;}
 
   // MODE E : Circulation SOL
-  bool CEON = false;
-  if(S_SOL>45){CEON=true;}
-  bool CEOFF = false;
-  if(S_SOL<42){CEOFF=true;}
+  bool CEON = S_SOL>45;
+  bool CEOFF = S_SOL<42;
   //Activation Mode E
   if((E==0) && (AUTO && CEON || !AUTO && FP==14)){E=1;}
   //Arret Mode E
   if((E==1) && (AUTO && CEOFF || !AUTO && FP==15)){E=0;}
 
-  // MODE E_ : OVERRIDE
-  bool CE_ON = false;
-  if(S_SOL>50 && S_SOL>S_BECS+20 || S_SOL>80){CE_ON = true;}
-  bool CE_OFF = false;
-  if(S_SOL<S_BECS+2 || S_SOL<45){CE_OFF=true;}
-  //Activation Mode E_
-  if((E_==0) && (AUTO && CE_ON || !AUTO && FP==14)){E_=1;}
-  //Arret Mode E_
-  if((E_==1) && (AUTO && CE_OFF || !AUTO && FP==15)){E_=0;}
+  // MODE H : OVERRIDE
+  bool CHON = S_SOL>50 && S_SOL>S_BECS+20 || S_SOL>80;
+  bool CHOFF = S_SOL<S_BECS+2 || S_SOL<45;
+  //Activation Mode H
+  if((H==0) && (AUTO && CHON || !AUTO && FP==14)){H=1;}
+  //Arret Mode H
+  if((H==1) && (AUTO && CHOFF || !AUTO && FP==15)){H=0;}
 
   // MODE F : Ouverture EV primaire
   bool CFON = 0;
@@ -340,7 +336,7 @@ void loop() {
   Conv=0;
   P1=0;P2=0;P3=0;P4=0;
 
-  if (A || B || C || D || E || E_ || F || G || S || Z){
+  if (A || B || C || D || E || H || F || G || S || Z){
     // Temps de maintien du convertisseur
     tConv = 30;
   }
@@ -369,9 +365,9 @@ void loop() {
   if(!E){digitalWrite(9,LOW);}
   if(DEBUG && E){Serial.print("E");}
 
-  if(E_){P4=1;Conv=1;}
-  if(!E_){}
-  if(DEBUG && E_){Serial.print("E_");}
+  if(H){P4=1;Conv=1;}
+  if(!H){}
+  if(DEBUG && H){Serial.print("H");}
 
   if(F){EV1=1;EV2=1;EV3=1;digitalWrite(5,HIGH);}
   if(!F){digitalWrite(5,LOW);}
