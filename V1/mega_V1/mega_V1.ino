@@ -41,7 +41,7 @@ int thresh = 400;
 bool Blink = 0;
 
 double enc_Brunal = 60; //85,66
-double ECSb_High = 55; //60
+double ECSb_High = 65; //60
 double ECSb_Low = 30;
 double ECSb = ECSb_High;
 int tempoE = 0;
@@ -243,7 +243,7 @@ void loop() {
   // GESTION DES MODES
   
   // MODE A : Sécurité Aquastat
-  bool CAON = S_ABR>80 && S_BECS>40 && S_ABR>S_BECS+5 && S_ABR>S_BTB2+5 && S_BECS<ECSb || S_ABR>85;
+  bool CAON = S_ABR>90 && S_BECS>40 && S_ABR>S_BECS+5 && S_ABR>S_BTB2+5 && S_BECS<ECSb || S_ABR>94;
   bool CAOFF = S_ABR < 65 && S_BECS<40 || S_ABR<S_BECS+15 && S_ABR<65 || S_ABR<S_BTB2+15 && S_ABR<65 ||S_ABR<85 && S_BECS>ECSb || S_ABR<75 && S_BECS>40;
   //Activation Mode A
   if((A==0) && (AUTO && CAON || !AUTO && FP==1)){A=1;}
@@ -275,16 +275,16 @@ void loop() {
   if((D==1) && (AUTO && CDOFF || !AUTO && FP==11)){D=0;}
 
   // MODE E : Circulation SOL
-  bool CEON = S_SOL>45;
-  bool CEOFF = S_SOL<42;
+  bool CEON = S_SOL>50 && S_SOL>S_BECS+1;
+  bool CEOFF = S_SOL<47 || S_SOL<S_BECS+2;
   //Activation Mode E
   if((E==0) && (AUTO && CEON || !AUTO && FP==14)){E=1;}
   //Arret Mode E
   if((E==1) && (AUTO && CEOFF || !AUTO && FP==15)){E=0;}
 
   // MODE H : OVERRIDE
-  bool CHON = S_SOL>50 && S_SOL>S_BECS+20 || S_SOL>80;
-  bool CHOFF = S_SOL<S_BECS+2 || S_SOL<45;
+  bool CHON = S_SOL>55 && S_SOL>S_BECS+5 || S_SOL>80;
+  bool CHOFF = S_SOL<S_BECS+2 || S_SOL<48;
   //Activation Mode H
   if((H==0) && (AUTO && CHON || !AUTO && FP==14)){H=1;}
   //Arret Mode H
@@ -307,8 +307,8 @@ void loop() {
   if((G==1) && (AUTO && CGOFF)){G=0;}
 
   // MODE S : Circulation Brunal
-  bool CSON = aq || (S_ABR>S_SECS+4) ;
-  bool CSOFF = !aq && (S_ABR<S_SECS+4) ;
+  bool CSON = aq || (S_ABR>S_SECS+1) ;
+  bool CSOFF = !aq && (S_ABR<S_SECS+1) ;
   //Activation Mode S
   if((S==0) && (AUTO && CSON)){S=1;}
   //Arret Mode S
