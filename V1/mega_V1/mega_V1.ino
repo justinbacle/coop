@@ -35,6 +35,8 @@ int G=0;
 int S=0;
 int Z=0;
 
+int tempoS=0;
+
 int DEBUG = 1;
 int N=0;
 int thresh = 400;
@@ -307,13 +309,16 @@ void loop() {
   if((G==1) && (AUTO && CGOFF)){G=0;}
 
   // MODE S : Circulation Brunal
-  bool CSON = aq || (S_ABR>S_SECS+1) ;
-  bool CSOFF = !aq && (S_ABR<S_SECS+1) ;
+  bool CSON = aq || (S_ABR>S_SECS+1);
+  bool CSOFF = !aq && (S_ABR<S_SECS+1);
   //Activation Mode S
-  if((S==0) && (AUTO && CSON)){S=1;}
+  if((S==0) && (AUTO && CSON)){S=1;tempoS=0;}
   //Arret Mode S
-  if((S==1) && (AUTO && CSOFF)){S=0;}
-   
+  if((S==1) && (AUTO && CSOFF)){tempoS+=1;}
+  // Tempo arret mode S
+  if (tempoS >= 30 * 60 / 2) // 30 min
+    {S=0;tempoS=0;}
+
   // MODE Z : Brunal + Tampon -> ECS
   bool CZON = S_BTB2>85 && S_ABR>94;
   bool CZOFF = S_ABR<(enc_Brunal-10); 
