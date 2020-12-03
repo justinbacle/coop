@@ -46,30 +46,44 @@ def updateNestedDict(d, key_lst, val):
     d[key_lst[-1]] = val
 
 
-def initMqtt():
-    def on_connect(client, userdata, flags, rc):
-        client.subscribe("temp/#")
+class mqttObject(QtCore.QObject):
+    newData = QtCore.pyqtSignal(object)
 
-    def on_message(client, userdata, msg):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.client = mqtt.Client()
+        self.client.on_connect = self.on_connect
+        self.client.on_message = self.on_message
+
+    def on_connect(self, client, userdata, flags, rc):
+        self.client.subscribe("temp/#")
+
+    def on_message(self, client, userdata, msg):
         keyChain = msg.topic.split('/')
         value = str(msg.payload)
-        # How to emit to the viewTree updateData ?
-        # .emit(
-        #     updateNestedDict({}, keyChain, value)
-        # )
+        self.newData.emit(
+            updateNestedDict({}, keyChain, value)
+        )
 
-    client = mqtt.Client()
-    client.on_connect = on_connect
-    client.on_message = on_message
-    client.connect("192.168.1.100", 1883, 60)
-    client.loop_forever()
+    def connect(self, ip="192.168.1.100", port=1883):
+        self.client.connect(ip, port=port, keepalive=60)
+        self.client.loop_forever()
 
 
 if __name__ == "__main__":
     # init mqtt
-    initMqtt()
+    mqttObject()
 
     app = QtWidgets.QApplication(sys.argv)
     treeWidget = ViewTree()
     treeWidget.show()
     sys.exit(app.exec_())
+
+    # def setupLogger(self):
+    #     self.handler = qt5.qt5LogHandler(self)
+    #     self.logTextBox.setVisible(False)
+    #     self.logTextBox.setReadOnly(True)
+    #     logging.getLogger().addHandler(self.handler)
+    #     logging.getLogger().setLevel(logging.INFO)
+    #     self.handler.new_record.connect(self.logTextBox.appendPlainText)  # <---- connect QPlainTextEdit.appendPlainText slot
+    #     self.handler.new_record.connect(self.showLog)
