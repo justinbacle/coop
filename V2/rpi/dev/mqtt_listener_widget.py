@@ -14,6 +14,7 @@ class ViewTree(QtWidgets.QTreeWidget):
 
         # set qtreewidget
         self.setColumnCount(2)
+        self.setHeaderLabels(["Sensor", "Data"])
 
         # set data dict
         self.dataDict = {}
@@ -34,11 +35,11 @@ class ViewTree(QtWidgets.QTreeWidget):
 
     @QtCore.pyqtSlot(dict)
     def updateData(self, dataDict: dict):
-        self.dataDict.update(dataDict)
+        self.dataDict.update(dataDict)  # -> Needs set in dict / merge dicts
         self.refresh()
 
 
-def updateNestedDict(d, key_lst, val):
+def updateNestedDict(d, key_lst, val):  # -> Replace to set in dict ?
     for k in key_lst[:-1]:
         if k not in d:
             d[k] = {}
@@ -47,43 +48,40 @@ def updateNestedDict(d, key_lst, val):
 
 
 class mqttObject(QtCore.QObject):
-    newData = QtCore.pyqtSignal(object)
+    newData = QtCore.pyqtSignal(dict)
 
     def __init__(self, parent):
         super().__init__(parent)
         self.client = mqtt.Client()
+        self.parent = parent
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
 
     def on_connect(self, client, userdata, flags, rc):
         self.client.subscribe("temp/#")
+        self.newData.connect(self.parent.updateData)
 
     def on_message(self, client, userdata, msg):
         keyChain = msg.topic.split('/')
-        value = str(msg.payload)
-        self.newData.emit(
-            updateNestedDict({}, keyChain, value)
-        )
+        value = str(msg.payload.decode())
+        _dict = {}
+        updateNestedDict(_dict, keyChain, value)  # -> replace to set in dict
+        self.newData.emit(_dict)
 
     def connect(self, ip="192.168.1.100", port=1883):
         self.client.connect(ip, port=port, keepalive=60)
-        self.client.loop_forever()
+        self.client.loop_start()
 
 
 if __name__ == "__main__":
-    # init mqtt
-    mqttObject()
 
+    # init pyqt app
     app = QtWidgets.QApplication(sys.argv)
     treeWidget = ViewTree()
     treeWidget.show()
-    sys.exit(app.exec_())
 
-    # def setupLogger(self):
-    #     self.handler = qt5.qt5LogHandler(self)
-    #     self.logTextBox.setVisible(False)
-    #     self.logTextBox.setReadOnly(True)
-    #     logging.getLogger().addHandler(self.handler)
-    #     logging.getLogger().setLevel(logging.INFO)
-    #     self.handler.new_record.connect(self.logTextBox.appendPlainText)  # <---- connect QPlainTextEdit.appendPlainText slot
-    #     self.handler.new_record.connect(self.showLog)
+    # init mqtt
+    mqttSocket = mqttObject(treeWidget)
+    mqttSocket.connect()
+
+    sys.exit(app.exec_())

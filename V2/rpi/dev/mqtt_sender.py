@@ -32,4 +32,4 @@ if __name__ == "__main__":
         sys.stdout.write(next(spinner))   # write the next character
         sys.stdout.flush()                # flush stdout buffer (actual character display)
         sys.stdout.write('\b')            # erase the last written char
-        time.sleep(0.1)
+        time.sleep(0.5)
