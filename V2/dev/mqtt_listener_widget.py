@@ -1,6 +1,10 @@
 import sys
+import os
 from PyQt5 import QtWidgets, QtCore
 import paho.mqtt.client as mqtt
+
+sys.path.append(os.getcwd())
+from V2.tools import misc  # noqa E402
 
 
 class ViewTree(QtWidgets.QTreeWidget):
@@ -35,16 +39,8 @@ class ViewTree(QtWidgets.QTreeWidget):
 
     @QtCore.pyqtSlot(dict)
     def updateData(self, dataDict: dict):
-        self.dataDict.update(dataDict)  # -> Needs set in dict / merge dicts
+        self.dataDict = dict(misc.mergeDicts(self.dataDict, dataDict))
         self.refresh()
-
-
-def updateNestedDict(d, key_lst, val):  # -> Replace to set in dict ?
-    for k in key_lst[:-1]:
-        if k not in d:
-            d[k] = {}
-        d = d[k]
-    d[key_lst[-1]] = val
 
 
 class mqttObject(QtCore.QObject):
@@ -65,7 +61,7 @@ class mqttObject(QtCore.QObject):
         keyChain = msg.topic.split('/')
         value = str(msg.payload.decode())
         _dict = {}
-        updateNestedDict(_dict, keyChain, value)  # -> replace to set in dict
+        misc.setInDict(_dict, keyChain, value)
         self.newData.emit(_dict)
 
     def connect(self, ip="192.168.1.100", port=1883):
