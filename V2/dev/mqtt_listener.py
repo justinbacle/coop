@@ -1,4 +1,9 @@
+import os
+import sys
 import paho.mqtt.client as mqtt
+
+sys.path.append(os.getcwd())
+import V2.config as config  # noqa E402
 
 
 # The callback for when the client receives a CONNACK response from the server.
@@ -19,7 +24,7 @@ client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
 
-client.connect("192.168.1.100", 1883, 60)
+client.connect(config.MQTT_SERVER_IP, 1883, 60)
 
 # Blocking call that processes network traffic, dispatches callbacks and
 # handles reconnecting.

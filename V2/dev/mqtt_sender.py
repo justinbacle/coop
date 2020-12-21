@@ -1,10 +1,10 @@
 import os
 import sys
 import itertools
+import paho.mqtt.publish as publish
 
 sys.path.append(os.getcwd())
 import V2.config as config  # noqa E402
-import paho.mqtt.publish as publish  # noqa E402
 
 
 def mqttPublish(path: str, data):
