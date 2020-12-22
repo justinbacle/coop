@@ -5,6 +5,7 @@ import paho.mqtt.client as mqtt
 
 sys.path.append(os.getcwd())
 from V2.tools import misc  # noqa E402
+import V2.config as config  # noqa E402
 
 
 class ViewTree(QtWidgets.QTreeWidget):
@@ -64,7 +65,7 @@ class mqttObject(QtCore.QObject):
         misc.setInDict(_dict, keyChain, value)
         self.newData.emit(_dict)
 
-    def connect(self, ip="192.168.1.100", port=1883):
+    def connect(self, ip=config.MQTT_SERVER_IP, port=1883):
         self.client.connect(ip, port=port, keepalive=60)
         self.client.loop_start()
 
@@ -74,7 +75,18 @@ if __name__ == "__main__":
     # init pyqt app
     app = QtWidgets.QApplication(sys.argv)
     treeWidget = ViewTree()
-    treeWidget.show()
+    # treeWidget.show()
+
+    # alternative
+    mainWindow = QtWidgets.QMainWindow()
+    mainWindow.setWindowTitle("Coop Heating")
+    mainLayout = QtWidgets.QHBoxLayout()
+    mainLayout.addWidget(treeWidget)
+    # add other widgets here to the main layout
+    mainWidget = QtWidgets.QWidget()
+    mainWindow.setCentralWidget(mainWidget)
+    mainWidget.setLayout(mainLayout)
+    mainWindow.show()
 
     # init mqtt
     mqttSocket = mqttObject(treeWidget)
