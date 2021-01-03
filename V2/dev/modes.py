@@ -20,10 +20,10 @@ class mode(dict):
     def __init__(self) -> None:
         super().__init__()
         self.definition = {}
-        self.definition.update({
+        self.status = {
             "active": False,
             "waiting": False
-        })
+        }
 
     def _checkRequiredFields(self, modeDict: dict = {}):
         for path in self._REQUIRED_FIELDS:
@@ -38,10 +38,10 @@ class mode(dict):
             self.definition = modeDict
 
     def __str__(self) -> str:
-        return self.definition
+        return self.definition + '\n' + self.status
 
     def __repr__(self) -> str:
-        return str(self.definition)
+        return str(self.definition + '\n' + self.stats)
 
 
 def loadModes():

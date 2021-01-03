@@ -1,13 +1,37 @@
 [
     {
         "id": "A",
-        "name": "test",
+        "name": "Mode A Detailed Name",
         "on": {
             "condition": "temp/a > 80",
             "delay": 0
         },
         "off": {
             "condition": "temp/a < 70",
+            "delay": 0
+        }
+    },
+    {
+        "id": "B",
+        "name": "Mode B Detailed Name",
+        "on": {
+            "condition": "temp/b > 80",
+            "delay": 0
+        },
+        "off": {
+            "condition": "temp/b < 70",
+            "delay": 0
+        }
+    },
+    {
+        "id": "C",
+        "name": "Mode C Detailed Name",
+        "on": {
+            "condition": "temp/c > 80 and temp/d < 60",
+            "delay": 0
+        },
+        "off": {
+            "condition": "temp/c < 70 or temp/d < 50",
             "delay": 0
         }
     }

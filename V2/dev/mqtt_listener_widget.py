@@ -51,9 +51,43 @@ class ModeWidget(QtWidgets.QListWidget):
         super().__init__(parent=parent)
 
 
-class ModeItem(QtWidgets.QListWidgetItem):
-    def __init__(self, label, parent=None):
-        super(QtGui.QListWidgetItem, self).__init__(label, parent=parent)
+class ModeItem(QtWidgets.QWidget):
+    def __init__(self, parent=None):
+        super(ModeItem, self).__init__(parent=parent)
+        self.textQVBoxLayout = QtWidgets.QVBoxLayout()
+        self.modeNameLabel = QtWidgets.QLabel()
+        self.modeStatusLabel = QtWidgets.QLabel()
+        self.textQVBoxLayout.addWidget(self.modeNameLabel)
+        self.textQVBoxLayout.addWidget(self.modeStatusLabel)
+        self.allQHBoxLayout = QtWidgets.QHBoxLayout()
+        self.modeIdLabel = QtWidgets.QLabel()
+        self.allQHBoxLayout.addWidget(self.modeIdLabel, 0)
+        self.allQHBoxLayout.addLayout(self.textQVBoxLayout, 1)
+        self.setLayout(self.allQHBoxLayout)
+        # setStyleSheet
+        self.modeNameLabel.setStyleSheet('''
+            color: rgb(0, 0, 0);
+        ''')
+        self.modeStatusLabel.setStyleSheet('''
+            color: rgb(50, 50, 50);
+        ''')
+        self.modeIdLabel.setStyleSheet('''
+            color: rgb(0, 0, 0);
+            font-weight:200;
+            font-size: 26pt;
+            margin-right: 12px;
+            border: 1px solid black;
+            border-radius: 10px;
+        ''')
+
+    def setModeName(self, text):
+        self.modeNameLabel.setText(text)
+
+    def setModeStatus(self, text):
+        self.modeStatusLabel.setText(text)
+
+    def setModeIdLabel(self, text):
+        self.modeIdLabel.setText(text)
 
 
 class mqttObject(QtCore.QObject):
@@ -90,7 +124,19 @@ if __name__ == "__main__":
     modesWidget = ModeWidget()
 
     modesList = modes.loadModes()
-    # create ListItemWidget items for modes
+    modeListItems = []
+    for mode in modesList:
+        _mode = ModeItem()
+        _mode.setModeIdLabel(mode.definition['id'])
+        _mode.setModeName(mode.definition["name"])
+        _mode.setModeStatus(f"Active : {mode.status['active']} / Tempo : {mode.status['waiting']}")
+        _modeItem = QtWidgets.QListWidgetItem()
+        modesWidget.addItem(_modeItem)
+        modesWidget.setItemWidget(_modeItem, _mode)
+        _modeItem.setSizeHint(_mode.sizeHint())
+        modeListItems.append(_mode)
+
+
     # store modes and make them accessible (states)
 
     # alternative
