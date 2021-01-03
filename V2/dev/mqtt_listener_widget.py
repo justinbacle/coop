@@ -1,11 +1,13 @@
 import sys
 import os
-from PyQt5 import QtWidgets, QtCore
+import typing
+from PyQt5 import QtWidgets, QtCore, QtGui
 import paho.mqtt.client as mqtt
 
 sys.path.append(os.getcwd())
 from V2.tools import misc  # noqa E402
 import V2.config as config  # noqa E402
+from V2.dev import modes  # noqa E402
 
 
 class ViewTree(QtWidgets.QTreeWidget):
@@ -44,6 +46,16 @@ class ViewTree(QtWidgets.QTreeWidget):
         self.refresh()
 
 
+class ModeWidget(QtWidgets.QListWidget):
+    def __init__(self, parent: typing.Optional[QtWidgets.QWidget] = None) -> None:
+        super().__init__(parent=parent)
+
+
+class ModeItem(QtWidgets.QListWidgetItem):
+    def __init__(self, label, parent=None):
+        super(QtGui.QListWidgetItem, self).__init__(label, parent=parent)
+
+
 class mqttObject(QtCore.QObject):
     newData = QtCore.pyqtSignal(dict)
 
@@ -75,13 +87,18 @@ if __name__ == "__main__":
     # init pyqt app
     app = QtWidgets.QApplication(sys.argv)
     treeWidget = ViewTree()
-    # treeWidget.show()
+    modesWidget = ModeWidget()
+
+    modesList = modes.loadModes()
+    # create ListItemWidget items for modes
+    # store modes and make them accessible (states)
 
     # alternative
     mainWindow = QtWidgets.QMainWindow()
     mainWindow.setWindowTitle("Coop Heating")
     mainLayout = QtWidgets.QHBoxLayout()
     mainLayout.addWidget(treeWidget)
+    mainLayout.addWidget(modesWidget)
     # add other widgets here to the main layout
     mainWidget = QtWidgets.QWidget()
     mainWindow.setCentralWidget(mainWidget)

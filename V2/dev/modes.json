@@ -1,0 +1,14 @@
+[
+    {
+        "id": "A",
+        "name": "test",
+        "on": {
+            "condition": "temp/a > 80",
+            "delay": 0
+        },
+        "off": {
+            "condition": "temp/a < 70",
+            "delay": 0
+        }
+    }
+]
