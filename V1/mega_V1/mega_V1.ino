@@ -383,17 +383,17 @@ void loop() {
   if(!E){digitalWrite(9,LOW);}
   if(DEBUG && E){Serial.print("E");}
 
-  if(H){Conv=1;EVSOL=1;}
-  if(!H){}
-  if(DEBUG && H){Serial.print("H");}
-
   if(F){EV1=1;EV2=1;EV3=1;digitalWrite(5,HIGH);}
   if(!F){digitalWrite(5,LOW);}
   if(DEBUG && F){Serial.print("F");}
 
-  if(G){Conv=1;P3=1;digitalWrite(6,HIGH);}
+  if(G){Conv=1;P3=1;EVSOL=1;digitalWrite(6,HIGH);}
   if(!G){digitalWrite(6,LOW);}
   if(DEBUG && G){Serial.print("G");}
+
+  if(H){Conv=1;EVSOL=1;}
+  if(!H){}
+  if(DEBUG && H){Serial.print("H");}
 
   if(O){EV1=1;EV2=1;EV4=1;Conv=1;P1=1;P4=1;digitalWrite(2,HIGH);digitalWrite(30,HIGH);}
   if(!O){digitalWrite(2,LOW);digitalWrite(30,LOW);}
