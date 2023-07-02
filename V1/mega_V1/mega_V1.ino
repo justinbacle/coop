@@ -11,6 +11,7 @@ int RP3 = 43;
 int REV3 = 44;
 int RP1 = 45;
 int REV2 = 46;
+int REVSOL = 47;
 int RConv = 48; // was 52
 
 int EV5 = 0;
@@ -22,6 +23,7 @@ int P3 = 0;
 int EV3 = 0;
 int P1 = 0;
 int EV2 = 0;
+int EVSOL = 0;
 int Conv = 0;
 
 int A=0;
@@ -32,6 +34,7 @@ int E=0;
 int H=0;
 int F=0;
 int G=0;
+int O=0;
 int S=0;
 int Z=0;
 
@@ -42,14 +45,14 @@ int N=0;
 int thresh = 400;
 bool Blink = 0;
 
-double enc_Brunal = 60; //85,66
+double enc_Brunal = 75; //85,66
 double ECSb_High = 65; //60
-double ECSb_Low = 30;
+double ECSb_Low = 40;
 double ECSb = ECSb_High;
 int tempoE = 0;
 int tempoHP4 = 0;
 int tempoHEV5 = 0;
-int Brunal_mini = 57;
+int Brunal_mini = 65;
 int tConv = 0;
 
 double S_ABR, S_SECS, S_RBR, S_BTB2, S_BTB1, S_BECS, S_BTH, S_SOL;
@@ -59,9 +62,9 @@ float nB = 0;
 float nC = 0;
 float nD = 0;
 float nE = 0;
-float nH = 0;
 float nF = 0;
 float nG = 0;
+float nH = 0;
 float nS = 0;
 float nZ = 0;
 int nTotal = 0;
@@ -114,6 +117,7 @@ void relais(){
   digitalWrite(REV3,!EV3);delay(t);
   digitalWrite(RP1,!P1);delay(t);
   digitalWrite(REV2,!EV2);delay(t);
+  digitalWrite(REVSOL,!EVSOL);delay(t);
   digitalWrite(RConv,!Conv);
 }
 
@@ -234,9 +238,10 @@ void loop() {
     if(serial=="C"){Serial.print("mode C actif ~");Serial.print(nC*2/60);Serial.print(" min");}
     if(serial=="D"){Serial.print("mode D actif ~");Serial.print(nD*2/60);Serial.print(" min");}
     if(serial=="E"){Serial.print("mode E actif ~");Serial.print(nE*2/60);Serial.print(" min");}
-    if(serial=="H"){Serial.print("mode H actif ~");Serial.print(nE*2/60);Serial.print(" min");}
     if(serial=="F"){Serial.print("mode F actif ~");Serial.print(nF*2/60);Serial.print(" min");}
     if(serial=="G"){Serial.print("mode G actif ~");Serial.print(nG*2/60);Serial.print(" min");}
+    if(serial=="H"){Serial.print("mode H actif ~");Serial.print(nH*2/60);Serial.print(" min");}
+    if(serial=="O"){Serial.print("mode O actif ~");Serial.print(nG*2/60);Serial.print(" min");}
     if(serial=="S"){Serial.print("mode S actif ~");Serial.print(nS*2/60);Serial.print(" min");}
     if(serial=="Z"){Serial.print("mode Z actif ~");Serial.print(nZ*2/60);Serial.print(" min");}
     }
@@ -245,15 +250,15 @@ void loop() {
   // GESTION DES MODES
   
   // MODE A : Sécurité Aquastat
-  bool CAON = S_ABR>90 && S_BECS>40 && S_ABR>S_BECS+5 && S_ABR>S_BTB2+5 && S_BECS<ECSb || S_ABR>94;
-  bool CAOFF = S_ABR < 65 && S_BECS<40 || S_ABR<S_BECS+15 && S_ABR<65 || S_ABR<S_BTB2+15 && S_ABR<65 ||S_ABR<85 && S_BECS>ECSb || S_ABR<75 && S_BECS>40;
+  bool CAON = S_ABR>95 ; //S_ABR>85 && S_BECS>60 && S_ABR>S_BECS+5 && S_ABR>S_BTB2+5 && S_BECS<ECSb || S_ABR>90;
+  bool CAOFF = S_ABR<76 ; //S_ABR < 72 || S_ABR<S_BECS+5 && S_ABR<72 || S_ABR<S_BTB2+5 && S_ABR<72 ||S_ABR<85 && S_BECS>ECSb;
   //Activation Mode A
   if((A==0) && (AUTO && CAON || !AUTO && FP==1)){A=1;}
   //Arret Mode A
   if((A==1) && (AUTO && CAOFF || !AUTO && FP==2)){A=0;}
 
   // MODE B : Tampon -> ECS
-  bool CBON = S_BTH>S_BECS+7 && S_BECS<ECSb && S_BTH>60 && S_ABR<25 ||S_BTB2>80 && S_BECS<80&&S_ABR<25;
+  bool CBON = S_BTH>S_BECS+15 && S_BECS<ECSb && S_BTH>55 && S_ABR<30 && S_BTB2>40 ||S_BTB2>80 && S_BECS<80&&S_ABR<30;
   bool CBOFF = (S_BTH<(S_BECS+2)) || (S_BTH<50) || (S_BECS>ECSb && S_BTH<80) || S_ABR>25;
   //Arret Mode B
   if((B==1) && (AUTO && CBOFF || !AUTO && FP==4)){B=0;}
@@ -261,32 +266,32 @@ void loop() {
   if((B==0) && (AUTO && CBON || !AUTO && FP==3)){B=1;}
 
   // MODE C : Brunal -> Tampon
-  bool CCON = S_BECS>ECSb && S_BTB2<85 && S_ABR>(enc_Brunal) && S_ABR>S_BTB2+30 ;
-  bool CCOFF = S_ABR<S_BTB2+5 && S_ABR<80|| S_BECS<ECSb || S_ABR<Brunal_mini ;
+  bool CCON = S_BECS>ECSb && S_BTB2<85 && S_ABR>(enc_Brunal) && S_ABR>S_BTB2+60 ;
+  bool CCOFF = S_ABR<S_BTB2+0.5 && S_ABR<80|| S_BECS<ECSb || S_ABR<Brunal_mini ;
   //Activation Mode C
   if((C==0) && (AUTO && CCON || !AUTO && FP==5)){C=1;}
   //Arret Mode C
   if((C==1) && (AUTO && CCOFF || !AUTO && FP==6)){C=0;}
 
   // MODE D : Brunal -> ECS
-  bool CDON = S_ABR>(enc_Brunal) && S_BECS<ECSb && S_ABR>S_BECS+20;
-  bool CDOFF = S_BECS>ECSb || S_ABR<S_BECS+5 && S_ABR<80|| S_ABR<Brunal_mini;
+  bool CDON = S_ABR>(enc_Brunal) && S_BECS<ECSb && S_ABR>S_BECS+10;
+  bool CDOFF = S_BECS>ECSb || S_ABR<S_BECS+2 && S_ABR<80|| S_ABR<Brunal_mini;
   //Activation Mode D
   if((D==0) && (AUTO && CDON || !AUTO && FP==10)){D=1;}
   //Arret Mode D
   if((D==1) && (AUTO && CDOFF || !AUTO && FP==11)){D=0;}
 
   // MODE E : Circulation SOL
-  bool CEON = S_SOL>50 && S_SOL>S_BECS+1;
-  bool CEOFF = S_SOL<47 || S_SOL<S_BECS+2;
+  bool CEON = S_SOL>92 && S_SOL>S_BECS+17 || S_SOL>95;
+  bool CEOFF = S_SOL<55 || S_SOL<S_BECS+7;
   //Activation Mode E
   if((E==0) && (AUTO && CEON || !AUTO && FP==14)){E=1;}
   //Arret Mode E
   if((E==1) && (AUTO && CEOFF || !AUTO && FP==15)){E=0;}
 
-  // MODE H : OVERRIDE
-  bool CHON = S_SOL>55 && S_SOL>S_BECS+5 || S_SOL>80;
-  bool CHOFF = S_SOL<S_BECS+2 || S_SOL<48;
+  // MODE H : EVSOL
+  bool CHON = E == 1 && (S_SOL > 90 || (S_SOL > 40 && S_SOL < 65));
+  bool CHOFF = E == 0 || (S_SOL > 65 && S_SOL > 80);
   //Activation Mode H
   if((H==0) && (AUTO && CHON || !AUTO && FP==14)){H=1;}
   //Arret Mode H
@@ -301,22 +306,30 @@ void loop() {
   if((F==1) && (AUTO && CFOFF)){F=0;}
 
   // MODE G : Mode Hors Gel
-  bool CGON = S_SOL < -90;
-  bool CGOFF = S_SOL > -90;
+  bool CGON = S_SOL < -15;
+  bool CGOFF = S_SOL > -15;
   //Activation Mode G
   if((G==0) && (AUTO && CGON)){G=1;}
   //Arret Mode G
   if((G==1) && (AUTO && CGOFF)){G=0;}
 
+  // MODE O : Defaut sondes
+  bool COON = S_SECS==0.0 || S_ABR==0.0 || S_RBR==0.0 || S_BTB2==0.0 || S_BECS==0.0;
+  bool COOFF = S_SECS!=0.0 && S_ABR!=0.0 && S_RBR!=0.0 && S_BTB2!=0.0 && S_BECS!=0.0 && S_BTB1!=0.0;
+  //Activation Mode G
+  if((O==0) && (AUTO && COON)){O=1;}
+  //Arret Mode G
+  if((O==1) && (AUTO && COOFF)){O=0;}
+
   // MODE S : Circulation Brunal
-  bool CSON = aq || (S_ABR>S_SECS+1);
-  bool CSOFF = !aq && (S_ABR<S_SECS+1);
+  bool CSON = aq || S_ABR>42;
+  bool CSOFF = !aq && S_ABR<38;
   //Activation Mode S
   if((S==0) && (AUTO && CSON)){S=1;tempoS=0;}
   //Arret Mode S
   if((S==1) && (AUTO && CSOFF)){tempoS+=1;}
   // Tempo arret mode S
-  if (tempoS >= 30 * 60 / 2) // 30 min
+  if (tempoS >= 10 * 60 / 2) // 10 min
     {S=0;tempoS=0;}
 
   // MODE Z : Brunal + Tampon -> ECS
@@ -370,7 +383,7 @@ void loop() {
   if(!E){digitalWrite(9,LOW);}
   if(DEBUG && E){Serial.print("E");}
 
-  if(H){P4=1;Conv=1;}
+  if(H){Conv=1;EVSOL=1;}
   if(!H){}
   if(DEBUG && H){Serial.print("H");}
 
@@ -381,6 +394,10 @@ void loop() {
   if(G){Conv=1;P3=1;digitalWrite(6,HIGH);}
   if(!G){digitalWrite(6,LOW);}
   if(DEBUG && G){Serial.print("G");}
+
+  if(O){EV1=1;EV2=1;EV4=1;Conv=1;P1=1;P4=1;digitalWrite(2,HIGH);digitalWrite(30,HIGH);}
+  if(!O){digitalWrite(2,LOW);digitalWrite(30,LOW);}
+  if(DEBUG && O){Serial.print("O");}
 
   if(S){Conv=1;P1=1;Blink=1;}
   if(!S){Blink=0;}
@@ -415,6 +432,7 @@ void loop() {
   if(E){nE++;}
   if(F){nF++;}
   if(G){nG++;}
+  if(H){nH++;}
   if(S){nS++;}
   if(Z){nZ++;}
 
