@@ -11,7 +11,7 @@ int RP3 = 43;
 int REV3 = 44;
 int RP1 = 45;
 int REV2 = 46;
-int REVSOL = 47;
+int REVSOL = 49;
 int RConv = 48; // was 52
 
 int EV5 = 0;
@@ -291,7 +291,7 @@ void loop() {
 
   // MODE H : EVSOL
   bool CHON = E == 1 && (S_SOL > 90 || (S_SOL > 40 && S_SOL < 65));
-  bool CHOFF = E == 0 || (S_SOL > 65 && S_SOL > 80);
+  bool CHOFF = E == 0 || (S_SOL > 65 && S_SOL < 80);
   //Activation Mode H
   if((H==0) && (AUTO && CHON || !AUTO && FP==14)){H=1;}
   //Arret Mode H
