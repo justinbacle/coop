@@ -282,8 +282,8 @@ void loop() {
   if((D==1) && (AUTO && CDOFF || !AUTO && FP==11)){D=0;}
 
   // MODE E : Circulation SOL
-  bool CEON = S_SOL>92 && S_SOL>S_BECS+17 || S_SOL>95;
-  bool CEOFF = S_SOL<55 || S_SOL<S_BECS+7;
+  bool CEON = S_SOL>90 && S_SOL>S_BECS+17 || S_SOL>95;
+  bool CEOFF = S_SOL<48 || S_SOL<S_BECS+7;
   //Activation Mode E
   if((E==0) && (AUTO && CEON || !AUTO && FP==14)){E=1;}
   //Arret Mode E
@@ -350,7 +350,7 @@ void loop() {
   }
 
   // ACTIVATION/ARRET DES MODES
-  EV1=0;EV2=0;EV3=0;EV4=0;EV5=0;
+  EV1=0;EV2=0;EV3=0;EV4=0;EV5=0;EVSOL=0;
   Conv=0;
   P1=0;P2=0;P3=0;P4=0;
 
