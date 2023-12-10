@@ -5,24 +5,24 @@
 int REV5 = 38;
 int RP2 = 39;
 int REV4 = 40;
-int RP4 = 41;
-int REV1 = 42;
+int REVD = 41;
+int REVB = 42;
 int RP3 = 43;
 int REV3 = 44;
 int RP1 = 45;
-int REV2 = 46;
+int REVC = 46;
 int REVSOL = 49;
 int RConv = 48; // was 52
 
-int EV5 = 0;
-int P2 = 0;
-int EV4 = 0;
-int P4 = 0;
-int EV1 = 0;
-int P3 = 0;
+int EVB = 0;  // was EV1
+int EVC = 0;  // was EV2
+int EVD = 0;
 int EV3 = 0;
+int EV4 = 0;
+int EV5 = 0;
 int P1 = 0;
-int EV2 = 0;
+int P2 = 0;
+int P3 = 0;
 int EVSOL = 0;
 int Conv = 0;
 
@@ -46,16 +46,16 @@ int thresh = 400;
 bool Blink = 0;
 
 double enc_Brunal = 75; //85,66
-double ECSb_High = 65; //60
+double ECSb_High = 80; //60
 double ECSb_Low = 40;
 double ECSb = ECSb_High;
 int tempoE = 0;
-int tempoHP4 = 0;
+int tempoHEVD = 0;
 int tempoHEV5 = 0;
 int Brunal_mini = 65;
 int tConv = 0;
 
-double S_ABR, S_SECS, S_RBR, S_BTB2, S_BTB1, S_BECS, S_BTH, S_SOL;
+double S_ABR, S_SECS, S_RBR, S_BTB2, S_BTB1, S_BECS, S_BTH, S_SOL_AMONT, S_SOL_AVAL;
 
 float nA = 0;
 float nB = 0;
@@ -111,12 +111,12 @@ void relais(){
   digitalWrite(REV5,!EV5);delay(t);
   digitalWrite(RP2,!P2);delay(t);
   digitalWrite(REV4,!EV4);delay(t);
-  digitalWrite(RP4,!P4);delay(t);
-  digitalWrite(REV1,!EV1);delay(t);
+  digitalWrite(REVD,!EVD);delay(t);
+  digitalWrite(REVB,!EVB);delay(t);
   digitalWrite(RP3,!P3);delay(t);
   digitalWrite(REV3,!EV3);delay(t);
   digitalWrite(RP1,!P1);delay(t);
-  digitalWrite(REV2,!EV2);delay(t);
+  digitalWrite(REVC,!EVC);delay(t);
   digitalWrite(REVSOL,!EVSOL);delay(t);
   digitalWrite(RConv,!Conv);
 }
@@ -194,8 +194,13 @@ void loop() {
   // Nano on Serial3
   Serial3.println("TC2");
   delay(SerialDelay);
-  S_SOL = getSerial3Temp();
-  if(DEBUG){Serial.print("S_SOL:");Serial.print(S_SOL);Serial.print("C ");}
+  S_SOL_AVAL = getSerial3Temp();
+  if(DEBUG){Serial.print("S_SOLav:");Serial.print(S_SOL_AVAL);Serial.print("C ");}
+
+  Serial3.println("TC1");
+  delay(SerialDelay);
+  S_SOL_AMONT = getSerial3Temp();
+  if(DEBUG){Serial.print("S_SOLam:");Serial.print(S_SOL_AMONT);Serial.print("C ");}
 
   // AQUASTAT
   int aq = !digitalRead(29);
@@ -223,7 +228,7 @@ void loop() {
 
   // ALERTES
   int alerte = -100;
-  if(S_ABR < alerte || S_BECS < alerte || S_BTB2 < alerte || S_BTH < alerte || S_SOL < alerte)
+  if(S_ABR < alerte || S_BECS < alerte || S_BTB2 < alerte || S_BTH < alerte || S_SOL_AVAL < alerte)
     {digitalWrite(30,HIGH);delay(1000);digitalWrite(30,LOW);}
 
   // PORT SERIE
@@ -282,16 +287,16 @@ void loop() {
   if((D==1) && (AUTO && CDOFF || !AUTO && FP==11)){D=0;}
 
   // MODE E : Circulation SOL
-  bool CEON = S_SOL>90 && S_SOL>S_BECS+17 || S_SOL>95;
-  bool CEOFF = S_SOL<48 || S_SOL<S_BECS+7;
+  bool CEON = S_SOL_AVAL>90 && S_SOL_AVAL>S_BECS+17+10 || S_SOL_AVAL>90+10;
+  bool CEOFF = S_SOL_AVAL<05+10 || S_SOL_AVAL<S_BECS+7+10;
   //Activation Mode E
   if((E==0) && (AUTO && CEON || !AUTO && FP==14)){E=1;}
   //Arret Mode E
   if((E==1) && (AUTO && CEOFF || !AUTO && FP==15)){E=0;}
 
   // MODE H : EVSOL
-  bool CHON = E == 1 && (S_SOL > 90 || (S_SOL > 40 && S_SOL < 65));
-  bool CHOFF = E == 0 || (S_SOL > 65 && S_SOL < 80);
+  bool CHON = E == 1 && (S_SOL_AVAL > 90) ; // (S_SOL_AVAL > 20 && S_SOL_AVAL < 45))
+  bool CHOFF = E == 0 || (S_SOL_AVAL  < 65);
   //Activation Mode H
   if((H==0) && (AUTO && CHON || !AUTO && FP==14)){H=1;}
   //Arret Mode H
@@ -306,8 +311,8 @@ void loop() {
   if((F==1) && (AUTO && CFOFF)){F=0;}
 
   // MODE G : Mode Hors Gel
-  bool CGON = S_SOL < -15;
-  bool CGOFF = S_SOL > -15;
+  bool CGON = S_SOL_AVAL < -15;
+  bool CGOFF = S_SOL_AVAL > -15;
   //Activation Mode G
   if((G==0) && (AUTO && CGON)){G=1;}
   //Arret Mode G
@@ -350,9 +355,10 @@ void loop() {
   }
 
   // ACTIVATION/ARRET DES MODES
-  EV1=0;EV2=0;EV3=0;EV4=0;EV5=0;EVSOL=0;
+  EVB=0;EVC=0;EVD=0;
+  EV3=0;EV4=0;EV5=0;EVSOL=0;
+  P1=0;P2=0;P3=0;
   Conv=0;
-  P1=0;P2=0;P3=0;P4=0;
 
   if (A || B || C || D || E || H || F || G || S || Z){
     // Temps de maintien du convertisseur
@@ -363,19 +369,19 @@ void loop() {
   }
   if (tConv > 0){Conv=1;}
 
-  if(A){EV1=1;EV2=1;EV4=1;Conv=1;P1=1;P4=1;digitalWrite(2,HIGH);}
+  if(A){P1=1;EVC=1;EVD=1;Conv=1;digitalWrite(2,HIGH);}
   if(!A){digitalWrite(2,LOW);}
   if(DEBUG && A){Serial.print("A");}
 
-  if(B){EV3=1;EV4=1;Conv=1;P2=1;P4=1;digitalWrite(3,HIGH);}
+  if(B){P2=1;EVB=1;Conv=1;digitalWrite(3,HIGH);}
   if(!B){digitalWrite(3,LOW);}
   if(DEBUG && B){Serial.print("B");}
 
-  if(C){EV2=1;Conv=1;P1=1;digitalWrite(4,HIGH);}
+  if(C){P1=1;EVC=1;Conv=1;digitalWrite(4,HIGH);}
   if(!C){digitalWrite(4,LOW);}
   if(DEBUG && C){Serial.print("C");}
 
-  if(D){EV1=1;EV4=1;Conv=1;P1=1;P4=1;digitalWrite(7,HIGH);}
+  if(D){P1=1;EVD=1;digitalWrite(7,HIGH);}
   if(!D){digitalWrite(7,LOW);}
   if(DEBUG && D){Serial.print("D");}
 
@@ -383,9 +389,9 @@ void loop() {
   if(!E){digitalWrite(9,LOW);}
   if(DEBUG && E){Serial.print("E");}
 
-  if(F){EV1=1;EV2=1;EV3=1;digitalWrite(5,HIGH);}
-  if(!F){digitalWrite(5,LOW);}
-  if(DEBUG && F){Serial.print("F");}
+  // if(F){EV1=1;EV2=1;EV3=1;digitalWrite(5,HIGH);}
+  // if(!F){digitalWrite(5,LOW);}
+  // if(DEBUG && F){Serial.print("F");}
 
   if(G){Conv=1;P3=1;EVSOL=1;digitalWrite(6,HIGH);}
   if(!G){digitalWrite(6,LOW);}
@@ -395,17 +401,17 @@ void loop() {
   if(!H){}
   if(DEBUG && H){Serial.print("H");}
 
-  if(O){EV1=1;EV2=1;EV4=1;Conv=1;P1=1;P4=1;digitalWrite(2,HIGH);digitalWrite(30,HIGH);}
-  if(!O){digitalWrite(2,LOW);digitalWrite(30,LOW);}
-  if(DEBUG && O){Serial.print("O");}
+  // if(O){EVB=1;EVC=1;EV4=1;Conv=1;P1=1;EVD=1;digitalWrite(2,HIGH);digitalWrite(30,HIGH);}
+  // if(!O){digitalWrite(2,LOW);digitalWrite(30,LOW);}
+  // if(DEBUG && O){Serial.print("O");}
 
   if(S){Conv=1;P1=1;Blink=1;}
   if(!S){Blink=0;}
   if(DEBUG && S){Serial.print("S");}
 
-  if(Z){EV1=1;EV3=1;EV4=1;Conv=1;P2=1;P4=1;digitalWrite(8,HIGH);}
-  if(!Z){digitalWrite(8,LOW);}
-  if(DEBUG && Z){Serial.print("Z");}
+  // if(Z){EVB=1;EV3=1;EV4=1;Conv=1;P2=1;EVD=1;digitalWrite(8,HIGH);}
+  // if(!Z){digitalWrite(8,LOW);}
+  // if(DEBUG && Z){Serial.print("Z");}
 
   //Blink mode S
   if(Blink)
@@ -456,7 +462,7 @@ void loop() {
    *  38  - EV5
    *  39  - P2
    *  40  - EV4
-   *  41  - P4
+   *  41  - EVD
    *  42  - EV1
    *  43  - P3
    *  44  - EV3
